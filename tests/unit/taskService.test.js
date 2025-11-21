@@ -4,26 +4,28 @@ const pool = require("../../src/config/db");
 
 describe("Task Service", () => {
 
+  let userId;
+
   beforeAll(async () => {
-    // Limpiar tablas antes de los tests
+    // Limpiar tablas primero
     await pool.query("DELETE FROM tasks");
     await pool.query("DELETE FROM users");
+
+    // Crear un usuario para asociar las tareas
+    const uniqueEmail = `pedro_${Date.now()}@test.com`;
+    const user = await userService.createUser({
+      name: "Pedro",
+      email: uniqueEmail,
+      password: "abc"
+    });
+    userId = user.id;
   });
 
   test("debería crear una tarea correctamente", async () => {
-    // 1️⃣ Crear un usuario primero
-    const uniqueEmail = `usuario_task_${Date.now()}@test.com`;
-    const user = await userService.createUser({
-      name: "Usuario Test",
-      email: uniqueEmail,
-      password: "123"
-    });
-
-    // 2️⃣ Crear la tarea con el user_id correcto
     const data = {
       title: "Tarea test",
       description: "Descripción test",
-      user_id: user.id
+      user_id: userId
     };
 
     const task = await taskService.createTask(data);

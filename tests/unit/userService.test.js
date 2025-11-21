@@ -1,17 +1,16 @@
 const userService = require("../../src/services/userService");
-const pool = require("../../src/config/db"); // conexión correcta
+const pool = require("../../src/config/db"); // conexión correcta a MySQL
 
 describe("User Service", () => {
 
   beforeAll(async () => {
-    // Borrar primero tareas y luego usuarios
+    // Borrar primero tareas y luego usuarios para evitar error de FK
     await pool.query("DELETE FROM tasks");
     await pool.query("DELETE FROM users");
   });
 
   test("debería crear un usuario correctamente", async () => {
     const uniqueEmail = `samuel_${Date.now()}@test.com`;
-
     const data = {
       name: "Samuel",
       email: uniqueEmail,
