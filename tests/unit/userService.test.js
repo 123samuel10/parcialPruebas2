@@ -1,10 +1,20 @@
 const userService = require("../../src/services/userService");
+const pool = require("../../src/config/db"); // conexión correcta
 
 describe("User Service", () => {
+
+  beforeAll(async () => {
+    // Borrar primero tareas y luego usuarios
+    await pool.query("DELETE FROM tasks");
+    await pool.query("DELETE FROM users");
+  });
+
   test("debería crear un usuario correctamente", async () => {
+    const uniqueEmail = `samuel_${Date.now()}@test.com`;
+
     const data = {
       name: "Samuel",
-      email: "samuel@test.com",
+      email: uniqueEmail,
       password: "123"
     };
 
@@ -12,6 +22,6 @@ describe("User Service", () => {
 
     expect(result).toHaveProperty("id");
     expect(result.name).toBe("Samuel");
-    expect(result.email).toBe("samuel@test.com");
+    expect(result.email).toBe(uniqueEmail);
   });
 });
