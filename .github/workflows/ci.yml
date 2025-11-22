@@ -8,6 +8,22 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: rootpassword
+          MYSQL_DATABASE: todo_test
+          MYSQL_USER: appuser
+          MYSQL_PASSWORD: apppassword
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -20,11 +36,22 @@ jobs:
       - name: Install deps
         run: npm install
 
+      - name: Initialize database
+        run: |
+          mysql -h 127.0.0.1 -u appuser -papppassword todo_test < init-db.sql
+
       # - name: Run ESLint
       #   run: npm run lint
 
       - name: Run tests
         run: npm test
+        env:
+          NODE_ENV: test
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_USER: appuser
+          DB_PASSWORD: apppassword
+          DB_NAME: todo_test
 
       - name: All Passed
         run: echo "OK"
