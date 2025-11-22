@@ -1,57 +1,71 @@
-name: CI
+name: CI Pipeline
 
 on:
   push:
+    branches: [ main, develop ]
   pull_request:
+    branches: [ main, develop ]
 
 jobs:
-  build:
+  test-and-analyze:
+    name: Test y Análisis
     runs-on: ubuntu-latest
 
     services:
       mysql:
         image: mysql:8.0
         env:
-          MYSQL_ROOT_PASSWORD: rootpassword
+          MYSQL_ROOT_PASSWORD: admin
           MYSQL_DATABASE: todo_test
-          MYSQL_USER: appuser
-          MYSQL_PASSWORD: apppassword
         ports:
           - 3306:3306
         options: >-
           --health-cmd="mysqladmin ping"
           --health-interval=10s
           --health-timeout=5s
-          --health-retries=3
+          --health-retries=5
 
     steps:
-      - name: Checkout
+      - name: Checkout código
         uses: actions/checkout@v4
 
-      - name: Setup Node
+      - name: Configurar Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: '20'
+          cache: 'npm'
 
-      - name: Install deps
-        run: npm install
-
-      - name: Initialize database
+      - name: 1️⃣ Instalar dependencias
         run: |
-          mysql -h 127.0.0.1 -u appuser -papppassword todo_test < init-db.sql
+          echo "📦 Instalando dependencias..."
+          npm ci
 
-      # - name: Run ESLint
-      #   run: npm run lint
+      - name: Configurar variables de entorno
+        run: |
+          echo "NODE_ENV=test" >> $GITHUB_ENV
+          echo "DB_HOST=127.0.0.1" >> $GITHUB_ENV
+          echo "DB_PORT=3306" >> $GITHUB_ENV
+          echo "DB_USER=root" >> $GITHUB_ENV
+          echo "DB_PASSWORD=admin" >> $GITHUB_ENV
+          echo "DB_NAME=todo_test" >> $GITHUB_ENV
 
-      - name: Run tests
-        run: npm test
-        env:
-          NODE_ENV: test
-          DB_HOST: 127.0.0.1
-          DB_PORT: 3306
-          DB_USER: appuser
-          DB_PASSWORD: apppassword
-          DB_NAME: todo_test
+      - name: 2️⃣ Inicializar base de datos
+        run: |
+          echo "🗄️ Creando tablas..."
+          mysql -h 127.0.0.1 -u root -padmin todo_test < init-db.sql
 
-      - name: All Passed
-        run: echo "OK"
+      - name: 3️⃣ Ejecutar todas las pruebas
+        run: |
+          echo "🧪 Ejecutando pruebas..."
+          npm test
+
+      - name: ✅ Pipeline completado exitosamente
+        run: |
+          echo "╔════════════════════════════════════════╗"
+          echo "║                                        ║"
+          echo "║              ✅ OK ✅                  ║"
+          echo "║                                        ║"
+          echo "║   Todas las pruebas pasaron           ║"
+          echo "║   correctamente                        ║"
+          echo "║                                        ║"
+          echo "╚════════════════════════════════════════╝"
