@@ -1,5 +1,5 @@
 module.exports = {
   testEnvironment: 'node',
-  globalTeardown: './jest.teardown.js',
+  setupFilesAfterEnv: ['./jest.setup.js'],
   testTimeout: 10000
 };
